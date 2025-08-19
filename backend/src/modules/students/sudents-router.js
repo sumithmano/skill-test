@@ -19,6 +19,5 @@ router.post("", isUserAdmin, validateBody(createStudentSchema), studentControlle
 router.get("/:id", validateParams(studentIdSchema), studentController.handleGetStudentDetail);
 router.post("/:id/status", isUserAdmin, validateParams(studentIdSchema), validateBody(studentStatusSchema), studentController.handleStudentStatus);
 router.put("/:id", isUserAdmin, validateParams(studentIdSchema), validateBody(updateStudentSchema), studentController.handleUpdateStudent);
-router.delete("/:id", isUserAdmin, validateParams(studentIdSchema), studentController.handleDeleteStudent);
 
 module.exports = { studentsRoutes: router };

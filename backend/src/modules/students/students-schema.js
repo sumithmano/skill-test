@@ -52,46 +52,68 @@ const baseStudentSchema = z.object({
         .optional()
         .nullable(),
     
-    roll: z.number()
-        .int("Roll number must be an integer")
-        .positive("Roll number must be positive")
-        .max(999, "Roll number cannot exceed 999")
+    roll: z.union([
+        z.string()
+            .transform((val) => parseInt(val))
+            .refine((val) => !isNaN(val) && val > 0, {
+                message: "Roll number must be a positive integer"
+            })
+            .refine((val) => val <= 999, {
+                message: "Roll number cannot exceed 999"
+            }),
+        z.number()
+            .int("Roll number must be an integer")
+            .positive("Roll number must be positive")
+            .max(999, "Roll number cannot exceed 999")
+    ])
         .optional()
         .nullable(),
     
     fatherName: z.string()
         .max(100, "Father's name cannot exceed 100 characters")
-        .regex(nameRegex, "Father's name can only contain letters, spaces, hyphens, and apostrophes")
+        .refine((val) => val === "" || nameRegex.test(val), {
+            message: "Father's name can only contain letters, spaces, hyphens, and apostrophes"
+        })
         .optional()
         .nullable(),
     
     fatherPhone: z.string()
-        .regex(phoneRegex, "Invalid father's phone number format")
         .max(20, "Father's phone number cannot exceed 20 characters")
+        .refine((val) => val === "" || phoneRegex.test(val), {
+            message: "Invalid father's phone number format"
+        })
         .optional()
         .nullable(),
     
     motherName: z.string()
         .max(100, "Mother's name cannot exceed 100 characters")
-        .regex(nameRegex, "Mother's name can only contain letters, spaces, hyphens, and apostrophes")
+        .refine((val) => val === "" || nameRegex.test(val), {
+            message: "Mother's name can only contain letters, spaces, hyphens, and apostrophes"
+        })
         .optional()
         .nullable(),
     
     motherPhone: z.string()
-        .regex(phoneRegex, "Invalid mother's phone number format")
         .max(20, "Mother's phone number cannot exceed 20 characters")
+        .refine((val) => val === "" || phoneRegex.test(val), {
+            message: "Invalid mother's phone number format"
+        })
         .optional()
         .nullable(),
     
     guardianName: z.string()
         .max(100, "Guardian's name cannot exceed 100 characters")
-        .regex(nameRegex, "Guardian's name can only contain letters, spaces, hyphens, and apostrophes")
+        .refine((val) => val === "" || nameRegex.test(val), {
+            message: "Guardian's name can only contain letters, spaces, hyphens, and apostrophes"
+        })
         .optional()
         .nullable(),
     
     guardianPhone: z.string()
-        .regex(phoneRegex, "Invalid guardian's phone number format")
         .max(20, "Guardian's phone number cannot exceed 20 characters")
+        .refine((val) => val === "" || phoneRegex.test(val), {
+            message: "Invalid guardian's phone number format"
+        })
         .optional()
         .nullable(),
     
