@@ -159,19 +159,25 @@ const queryParamsSchema = z.object({
         .refine((val) => !isNaN(val) && val >= 1, {
             message: "Page must be a positive integer"
         })
+        .optional()
         .default("1"),
     limit: z.string()
         .transform((val) => parseInt(val))
         .refine((val) => !isNaN(val) && val >= 1 && val <= 100, {
             message: "Limit must be between 1 and 100"
         })
+        .optional()
         .default("10"),
     sortBy: z.enum(["id", "name", "email", "class", "section", "roll"], {
         errorMap: () => ({ message: "Sort field must be one of: id, name, email, class, section, roll" })
-    }).default("id"),
+    })
+    .optional()
+    .default("id"),
     sortOrder: z.enum(["asc", "desc"], {
         errorMap: () => ({ message: "Sort order must be 'asc' or 'desc'" })
-    }).default("asc")
+    })
+    .optional()
+    .default("asc")
 });
 
 // Schema for student ID parameter
@@ -213,6 +219,7 @@ const validateBody = (schema) => {
             if (error instanceof z.ZodError) {
                 throw new ApiError(400, formatZodErrors(error));
             }
+            // For non-Zod errors, pass to next middleware
             next(error);
         }
     };
@@ -228,6 +235,7 @@ const validateQuery = (schema) => {
             if (error instanceof z.ZodError) {
                 throw new ApiError(400, formatZodErrors(error));
             }
+            // For non-Zod errors, pass to next middleware
             next(error);
         }
     };
@@ -243,6 +251,7 @@ const validateParams = (schema) => {
             if (error instanceof z.ZodError) {
                 throw new ApiError(400, error.errors[0].message);
             }
+            // For non-Zod errors, pass to next middleware
             next(error);
         }
     };

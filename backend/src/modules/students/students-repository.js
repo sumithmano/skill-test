@@ -8,7 +8,8 @@ const getRoleId = async (roleName) => {
 }
 
 const findAllStudents = async (payload) => {
-    const { name, className, section, roll } = payload;
+    const { name, className, section, roll, page = 1, limit = 10, sortBy = 'id', sortOrder = 'asc' } = payload;
+
     let query = `
         SELECT
             t1.id,
@@ -20,9 +21,10 @@ const findAllStudents = async (payload) => {
         LEFT JOIN user_profiles t3 ON t1.id = t3.user_id
         WHERE t1.role_id = 3`;
     let queryParams = [];
+
     if (name) {
-        query += ` AND t1.name = $${queryParams.length + 1}`;
-        queryParams.push(name);
+        query += ` AND t1.name ILIKE $${queryParams.length + 1}`;
+        queryParams.push(`%${name}%`);
     }
     if (className) {
         query += ` AND t3.class_name = $${queryParams.length + 1}`;
@@ -37,7 +39,26 @@ const findAllStudents = async (payload) => {
         queryParams.push(roll);
     }
 
-    query += ' ORDER BY t1.id';
+    // Add sorting
+    const validSortFields = ['id', 'name', 'email', 'class', 'section', 'roll'];
+    const safeSortBy = validSortFields.includes(sortBy) ? sortBy : 'id';
+    const safeSortOrder = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+    // Map frontend sort fields to database columns
+    const sortFieldMap = {
+        'id': 't1.id',
+        'name': 't1.name',
+        'email': 't1.email',
+        'class': 't3.class_name',
+        'section': 't3.section_name',
+        'roll': 't3.roll'
+    };
+
+    query += ` ORDER BY ${sortFieldMap[safeSortBy]} ${safeSortOrder}`;
+
+    // Add pagination
+    const offset = (page - 1) * limit;
+    query += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
 
     const { rows } = await processDBRequest({ query, queryParams });
     return rows;
