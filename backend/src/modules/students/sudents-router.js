@@ -1,11 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const studentController = require("./students-controller");
+const { isUserAdmin } = require("../../middlewares");
+const { 
+    validateBody, 
+    validateQuery, 
+    validateParams,
+    createStudentSchema, 
+    updateStudentSchema, 
+    queryParamsSchema, 
+    studentIdSchema, 
+    studentStatusSchema 
+} = require("./students-schema");
 
-router.get("", studentController.handleGetAllStudents);
-router.post("", studentController.handleAddStudent);
-router.get("/:id", studentController.handleGetStudentDetail);
-router.post("/:id/status", studentController.handleStudentStatus);
-router.put("/:id", studentController.handleUpdateStudent);
+// Apply validation middleware to routes
+router.get("", validateQuery(queryParamsSchema), studentController.handleGetAllStudents);
+router.post("", isUserAdmin, validateBody(createStudentSchema), studentController.handleAddStudent);
+router.get("/:id", validateParams(studentIdSchema), studentController.handleGetStudentDetail);
+router.post("/:id/status", isUserAdmin, validateParams(studentIdSchema), validateBody(studentStatusSchema), studentController.handleStudentStatus);
+router.put("/:id", isUserAdmin, validateParams(studentIdSchema), validateBody(updateStudentSchema), studentController.handleUpdateStudent);
+router.delete("/:id", isUserAdmin, validateParams(studentIdSchema), studentController.handleDeleteStudent);
 
 module.exports = { studentsRoutes: router };
