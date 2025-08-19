@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { ApiError } = require("../../utils");
 
 // Common validation patterns
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -187,6 +188,20 @@ const studentStatusSchema = z.object({
     })
 });
 
+// Helper function to format Zod errors for ApiError
+const formatZodErrors = (zodError) => {
+    const errors = zodError.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message
+    }));
+    
+    if (errors.length === 1) {
+        return errors[0].message;
+    }
+    
+    return `Validation failed: ${errors.map(err => `${err.field}: ${err.message}`).join(', ')}`;
+};
+
 // Validation middleware functions
 const validateBody = (schema) => {
     return (req, res, next) => {
@@ -196,15 +211,7 @@ const validateBody = (schema) => {
             next();
         } catch (error) {
             if (error instanceof z.ZodError) {
-                const errors = error.errors.map(err => ({
-                    field: err.path.join('.'),
-                    message: err.message
-                }));
-                
-                return res.status(400).json({
-                    error: "Validation failed",
-                    details: errors
-                });
+                throw new ApiError(400, formatZodErrors(error));
             }
             next(error);
         }
@@ -219,15 +226,7 @@ const validateQuery = (schema) => {
             next();
         } catch (error) {
             if (error instanceof z.ZodError) {
-                const errors = error.errors.map(err => ({
-                    field: err.path.join('.'),
-                    message: err.message
-                }));
-                
-                return res.status(400).json({
-                    error: "Validation failed",
-                    details: errors
-                });
+                throw new ApiError(400, formatZodErrors(error));
             }
             next(error);
         }
@@ -242,10 +241,7 @@ const validateParams = (schema) => {
             next();
         } catch (error) {
             if (error instanceof z.ZodError) {
-                return res.status(400).json({
-                    error: "Validation failed",
-                    details: [{ field: "id", message: error.errors[0].message }]
-                });
+                throw new ApiError(400, error.errors[0].message);
             }
             next(error);
         }
